@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cut">
 <meta name="robots" content="noindex, nofollow">
 <title>שאלון קצר לסוכני ביטוח · INES</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%231f5fa8%22/%3E%3Ctext x=%2232%22 y=%2242%22 font-size=%2226%22 font-family=%22Arial%22 font-weight=%22700%22 text-anchor=%22middle%22 fill=%22white%22%3EIN%3C/text%3E%3C/svg%3E">
 <!--
   INES – agent research questionnaire (single self-contained file).
   - No backend. Answers stay in this browser (localStorage) until the agent sends them
@@ -273,6 +274,8 @@ const STEPS = [
 const TOTAL_MIN = STEPS.reduce((a,s)=>a+s.min,0);
 
 let state = load();
+/* On (re)open, land on the intro so a returning agent sees 'continue where I stopped'. */
+if (typeof state.screen === "number" && Object.keys(state.a||{}).length) { state.last = state.screen; state.screen = "intro"; }
 function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || {screen:"intro", a:{}} }catch(e){ return {screen:"intro", a:{}} } }
 let saveTimer;
 function save(){ try{ state.savedAt = new Date().toISOString(); localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
@@ -417,8 +420,15 @@ function download(name, content, type){ const b=new Blob([content],{type}); cons
 function renderSummary(){
   const text=buildText();
   const num=(CONFIG.whatsappNumber||"").replace(/\D/g,"");
-  const wa = `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
-  const mail = `mailto:${encodeURIComponent(CONFIG.email||"")}?subject=${encodeURIComponent("שאלון INES – תשובות")}&body=${encodeURIComponent(text)}`;
+  /* Long prefilled links (> ~2000 chars) can be cut or rejected by WhatsApp / mail clients.
+     If the full link is too long: copy the full answers to the clipboard on click and prefill a short note asking to paste. */
+  const MAX_URL = 2000;
+  const SHORT = "שלום, הנה התשובות שלי לשאלון INES.\n(התשובות הועתקו – הדביקו כאן את הטקסט המלא)";
+  const waFull = `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+  const wa = waFull.length <= MAX_URL ? waFull : `https://wa.me/${num}?text=${encodeURIComponent(SHORT)}`;
+  const mailFull = `mailto:${encodeURIComponent(CONFIG.email||"")}?subject=${encodeURIComponent("שאלון INES – תשובות")}&body=${encodeURIComponent(text)}`;
+  const mail = mailFull.length <= MAX_URL ? mailFull : `mailto:${encodeURIComponent(CONFIG.email||"")}?subject=${encodeURIComponent("שאלון INES – תשובות")}&body=${encodeURIComponent(SHORT)}`;
+  const isLong = waFull.length > MAX_URL;
   app.innerHTML = `
   <section class="card thanks"><div class="big" aria-hidden="true">✓</div><h1>תודה רבה!</h1><p class="lead">זה ממש עוזר לבנות משהו שבאמת חוסך עבודה. נשאר רק לשלוח לי את התשובות, באיזו דרך שנוח לך.</p></section>
   <section class="card" aria-labelledby="sumh">
@@ -426,8 +436,8 @@ function renderSummary(){
     <p class="qhint">אפשר לחזור ולתקן לפני השליחה.</p>
     <div class="summary" tabindex="0">${esc(text)}</div>
     <div class="actions">
-      <a class="btn wa" href="${wa}" target="_blank" rel="noopener">שליחה בוואטסאפ</a>
-      <a class="btn soft" href="${mail}">שליחה במייל</a>
+      <a class="btn wa" id="wa" href="${wa}" target="_blank" rel="noopener">שליחה בוואטסאפ</a>
+      <a class="btn soft" id="mail" href="${mail}">שליחה במייל</a>
       <button class="btn soft" id="copy" type="button">העתקת התשובות</button>
       <button class="btn ghost" id="dl" type="button">הורדה כקובץ טקסט</button>
     </div>
@@ -435,9 +445,11 @@ function renderSummary(){
       <button class="btn ghost" id="edit" type="button">→ חזרה לתיקון</button>
       <button class="btn ghost" id="dljson" type="button">הורדת JSON</button>
     </div>
-    <p class="privacy">אם הוואטסאפ לא נפתח עם כל הטקסט (הודעות ארוכות), לחצו "העתקת התשובות" והדביקו בצ׳אט.</p>
+    <p class="privacy">${isLong ? "התשובות ארוכות מכדי להיכנס לקישור, אז בלחיצה על וואטסאפ או מייל הן יועתקו אוטומטית. נשאר רק להדביק בהודעה (לחיצה ארוכה ← הדבקה)." : "אם ההודעה לא נפתחת עם כל הטקסט, לחצו \"העתקת התשובות\" והדביקו."}</p>
   </section>`;
-  document.getElementById("copy").onclick=async()=>{ try{ await navigator.clipboard.writeText(text); toast("הועתק ✓"); }catch(e){ const t=document.createElement("textarea"); t.value=text; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); toast("הועתק ✓"); } };
+  const copyText = async () => { try{ await navigator.clipboard.writeText(text); }catch(e){ const t=document.createElement("textarea"); t.value=text; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); } };
+  document.getElementById("copy").onclick=async()=>{ await copyText(); toast("הועתק ✓"); };
+  if (isLong) ["wa","mail"].forEach(id=>document.getElementById(id).addEventListener("click", ()=>{ copyText(); toast("התשובות הועתקו – הדביקו בהודעה"); }));
   document.getElementById("dl").onclick=()=>download("INES-answers.txt", text, "text/plain;charset=utf-8");
   document.getElementById("dljson").onclick=()=>download("INES-answers.json", buildJSON(), "application/json");
   document.getElementById("edit").onclick=()=>{ state.screen=STEPS.length-1; save(); render(); };
