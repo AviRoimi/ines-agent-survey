@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cut">
+<meta name="robots" content="noindex, nofollow">
+<title>שאלון קצר לסוכני ביטוח · INES</title>
+<!--
+  INES – agent research questionnaire (single self-contained file).
+  - No backend. Answers stay in this browser (localStorage) until the agent sends them
+    via WhatsApp / email / copy / download.
+  - A form backend (e.g. Google Forms / Formspree) could replace the manual send later,
+    but that requires Avihai's approval (sign-up + data processor). Not done here.
+  - No analytics, no trackers. The only external resource is the Google Font (Heebo).
+  - Fill CONFIG below before sending the link (leave empty => WhatsApp opens the contact picker).
+
+  MAPPING: original dossier question # (INES Roadmap Page, §4) -> field id(s)
+   Q1  files/month + hours per file          -> s2_files_month, s2_hours_per_file
+   Q2  time split chase/entry/waiting        -> s2_load_chase, s2_load_entry, s2_load_wait
+   Q3  referent pay + willingness to pay     -> s1_referents, s2_referent_cost, s6_wtp (+ s6_wtp_note)
+   Q4  insurers by volume + never-work-with  -> s3_insurers_top, s3_insurers_never
+   Q5  CRM, API/export, vendor contact       -> s4_crm (+note), s4_crm_export, s4_crm_contact
+   Q6  how Har HaBituach + time              -> s4_harb_how, s4_harb_time
+   Q7  Mislaka 9100/1700 channel + cost      -> s4_mislaka_how, s4_mislaka_cost
+   Q8  e-sign tool + insurer rejections      -> s4_esign (+note), s4_esign_rejected, s4_esign_rejected_note
+   Q9  per-insurer online submission         -> s4_submit_matrix
+   Q10 how underwriting requirements arrive  -> s3_uw_channels, s3_uw_format
+   Q11 Excel reports from portals            -> s4_reports_freq, s4_reports_use
+   Q12 last risk sale walkthrough / stalls   -> s3_stuck_points, s3_last_sale (required)
+   Q13 call recording today + 10-day handover-> s5_record, s5_record_system, s5_record_keep, s5_handover_conf
+   Q14 audits of צירוף documentation         -> s5_audit, s5_audit_note
+   Q15 Har HaBituach after 5 working days    -> s5_harb_after
+   Q16 documenting material info             -> s3_material_info
+   Q17 who fills health questionnaire + rejections -> s3_health_how, s3_health_rejected
+   Q18 policy replacement (נספח ב'/ג')       -> s3_replace_who, s3_replace_check (+note)
+   Q19 seniors two-stage process             -> s3_seniors
+   Q20 confidentiality waiver for processors -> s5_waiver
+   Q21 AI autonomy per task                  -> s6_ai_matrix
+   Q22 AI talking to clients                 -> s6_ai_clients
+   Q23 AI contacting underwriting desks      -> s6_ai_insurer, s6_insurer_bot_ok
+   Q24 mistake that would make you stop      -> s6_dealbreaker (required)
+   Q25 sharing portal credentials            -> s4_credentials
+   Q26 data hosting + asked about regs/DPO   -> s5_hosting, s5_dpo_asked
+   Q27 Reg. 15 outsourcing contract          -> s5_reg15
+   Q28 purchase decision, budget, pricing    -> s6_decider, s6_wtp, s6_pricing
+   Q29 switch CRM or add-ons only            -> s6_switch (+note)
+   Q30 tried Jamm / other AI, what missing   -> s6_tried_ai, s6_tried_ai_note
+   Q31 next line after life risk             -> s6_next_line
+   Q32 paid pilot + X files/month            -> s6_pilot, s6_pilot_x
+   Q33 interns/agents under licence + supervision -> s1_team, s1_team_note
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f6fa; --bg2:#e9eff7; --card:#ffffff; --ink:#14243a; --ink2:#44566e; --ink3:#6b7c92;
+  --line:#dbe3ee; --brand:#1f5fa8; --brand-d:#174a85; --brand-l:#e6effa; --teal:#1c8c83; --teal-l:#e3f4f2;
+  --warn:#b4541a; --ok:#1d7a4a; --radius:18px; --shadow:0 1px 2px rgba(20,36,58,.06),0 8px 24px rgba(20,36,58,.08);
+  --focus:0 0 0 3px rgba(31,95,168,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Heebo,"Assistant","Segoe UI",Arial,sans-serif;color:var(--ink);background:
+  radial-gradient(1200px 500px at 100% -10%, #dfeaf8 0%, rgba(223,234,248,0) 60%),
+  radial-gradient(900px 400px at -10% 110%, #dff1ee 0%, rgba(223,241,238,0) 60%), var(--bg);
+  min-height:100vh;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 120px}
+header.top{display:flex;align-items:center;gap:10px;padding:6px 2px 14px}
+.logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--brand),var(--teal));display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;letter-spacing:.5px;box-shadow:var(--shadow)}
+.brandname{font-weight:700;font-size:15px}
+.brandsub{font-size:12.5px;color:var(--ink3)}
+.progress{position:sticky;top:0;z-index:5;background:rgba(243,246,250,.92);backdrop-filter:blur(8px);padding:10px 2px 12px;margin:0 -2px 6px}
+.progress .meta{display:flex;justify-content:space-between;font-size:13px;color:var(--ink2);margin-bottom:7px;gap:8px;flex-wrap:wrap}
+.bar{height:8px;background:var(--bg2);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--brand));border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.dots{display:none;gap:6px;margin-top:9px;flex-wrap:wrap}
+.dots span{font-size:12px;padding:3px 9px;border-radius:99px;background:var(--bg2);color:var(--ink3)}
+.dots span.on{background:var(--brand);color:#fff}
+.dots span.done{background:var(--teal-l);color:var(--teal)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 20px;margin:14px 0;animation:in .35s ease both}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+h1{font-size:26px;line-height:1.25;margin:4px 0 10px;font-weight:800;letter-spacing:-.2px}
+h2{font-size:21px;margin:0 0 4px;font-weight:800}
+.lead{color:var(--ink2);font-size:16px;margin:0 0 6px}
+.steptag{display:inline-block;font-size:12.5px;font-weight:600;color:var(--teal);background:var(--teal-l);padding:3px 10px;border-radius:99px;margin-bottom:8px}
+.q{padding:16px 0;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:0}
+.qlabel{font-weight:600;font-size:16.5px;display:block;margin-bottom:4px}
+.qhint{font-size:13.5px;color:var(--ink3);margin:0 0 10px}
+.req{color:var(--warn);font-weight:700;margin-inline-start:4px}
+.opt{font-size:12px;color:var(--ink3);font-weight:400;margin-inline-start:6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{appearance:none;border:1.5px solid var(--line);background:#fff;color:var(--ink);border-radius:99px;padding:9px 15px;font:inherit;font-size:15px;cursor:pointer;transition:transform .12s ease,background .15s,border-color .15s,box-shadow .15s;min-height:42px;display:inline-flex;align-items:center;gap:6px}
+.chip:hover{border-color:#b9c8dc;transform:translateY(-1px)}
+.chip:active{transform:scale(.97)}
+.chip[aria-pressed="true"],.chip[aria-checked="true"]{background:var(--brand-l);border-color:var(--brand);color:var(--brand-d);font-weight:600}
+.chip .ord{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;font-weight:700}
+.chip:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:none;box-shadow:var(--focus)}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-width:420px}
+.scale .chip{justify-content:center;padding:9px 0;border-radius:12px}
+.scaleends{display:flex;justify-content:space-between;max-width:420px;font-size:12.5px;color:var(--ink3);margin-top:5px}
+.loadrow{display:grid;grid-template-columns:1fr;gap:6px;margin:10px 0}
+.loadrow .name{font-size:14.5px;color:var(--ink2)}
+input[type=text],input[type=tel],input[type=number],textarea{width:100%;font:inherit;font-size:16px;color:var(--ink);background:#fbfcfe;border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;transition:border-color .15s, box-shadow .15s}
+input:hover,textarea:hover{border-color:#b9c8dc}
+textarea{min-height:92px;resize:vertical}
+.addword{margin-top:10px}
+.addword input{font-size:15px;padding:9px 12px;background:#fff}
+.rangewrap{display:flex;align-items:center;gap:14px}
+input[type=range]{flex:1;accent-color:var(--brand);height:28px}
+.rangeval{min-width:96px;text-align:center;font-weight:700;color:var(--brand-d);background:var(--brand-l);border-radius:10px;padding:6px 8px;font-size:15px}
+.matrix{display:flex;flex-direction:column;gap:10px}
+.mrow{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#fbfcfe}
+.mrow .mname{font-weight:600;font-size:15px;margin-bottom:7px}
+.mrow .chips .chip{font-size:14px;padding:7px 12px;min-height:38px}
+.grid2{display:grid;grid-template-columns:1fr;gap:10px}
+.nav{position:fixed;inset:auto 0 0 0;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));z-index:10}
+.nav .in{max-width:760px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.btn{appearance:none;border:0;font:inherit;font-weight:700;font-size:16px;border-radius:14px;padding:13px 20px;cursor:pointer;transition:transform .12s, background .15s, box-shadow .15s;min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--brand);color:#fff;box-shadow:0 6px 16px rgba(31,95,168,.28);flex:1}
+.btn.primary:hover{background:var(--brand-d)}
+.btn.ghost{background:transparent;color:var(--ink2);border:1.5px solid var(--line)}
+.btn.ghost:hover{background:var(--bg2)}
+.btn.soft{background:var(--brand-l);color:var(--brand-d)}
+.btn.wa{background:#1f8f5a;color:#fff}
+.btn.wa:hover{background:#18784b}
+.saved{font-size:12.5px;color:var(--ink3);white-space:nowrap}
+.introgrid{display:grid;gap:10px;margin:14px 0 6px}
+.introbtns .btn{flex:1 1 100%}
+.pill{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:11px 13px;font-size:15px;color:var(--ink2)}
+.pill b{color:var(--ink)}
+.ico{flex:none;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:var(--teal-l);color:var(--teal);font-weight:800;font-size:14px}
+.privacy{font-size:13px;color:var(--ink3);margin-top:12px}
+.err{color:var(--warn);font-size:13.5px;margin-top:8px;display:none}
+.q.invalid .err{display:block}
+.q.invalid textarea,.q.invalid .chips{outline:2px solid rgba(180,84,26,.25);outline-offset:4px;border-radius:12px}
+.summary{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px;font-size:14px;max-height:340px;overflow:auto;color:var(--ink2)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.actions .btn{width:100%;white-space:nowrap;padding-inline:10px}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:20}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.thanks{text-align:center}
+.thanks .big{width:64px;height:64px;border-radius:20px;margin:6px auto 12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--teal),var(--brand));color:#fff;font-size:30px;box-shadow:var(--shadow)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (min-width:720px){
+  .wrap{padding:28px 24px 130px}
+  .card{padding:30px 32px}
+  h1{font-size:32px}
+  .grid2{grid-template-columns:1fr 1fr}
+  .dots{display:flex}
+  .introbtns .btn{flex:0 1 auto}
+  .introgrid{grid-template-columns:1fr 1fr}
+  .loadrow{grid-template-columns:200px 1fr;align-items:center}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo" aria-hidden="true">IN</div>
+    <div><div class="brandname">INES · שאלון לסוכנים</div><div class="brandsub" id="bsub">מחקר מוצר · כ-9 דקות</div></div>
+  </header>
+  <div class="progress" id="progress" hidden>
+    <div class="meta"><span id="pstep"></span><span id="ptime"></span></div>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="pbar"><i></i></div>
+    <div class="dots" id="pdots"></div>
+  </div>
+  <main id="app" aria-live="polite"></main>
+</div>
+<nav class="nav" id="nav" hidden>
+  <div class="in">
+    <button class="btn ghost" id="back" type="button">→ חזרה</button>
+    <button class="btn primary" id="next" type="button">המשך ←</button>
+    <span class="saved" id="saved" aria-live="polite"></span>
+  </div>
+</nav>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ====== CONFIG: fill before sending (leave empty = WhatsApp contact picker / blank email) ====== */
+const CONFIG = {
+  whatsappNumber: "",   // empty on purpose: WhatsApp opens the contact picker
+  email: "",            // e.g. "you@example.com" – EMPTY placeholder
+  askerName: "אביחי"
+};
+/* =============================================================================================== */
+
+const STORE_KEY = "ines_agent_questionnaire_v1";
+const INSURERS = ["הראל","מגדל","כלל","הפניקס","מנורה מבטחים","איילון","הכשרה","אחר"];
+
+const STEPS = [
+ { id:"s1", title:"עליך ועל הסוכנות", min:1, intro:"כמה פרטים קצרים כדי שנבין את ההקשר. הכול אופציונלי חוץ מהתפקיד.", fields:[
+   {id:"s1_name", type:"text", label:"שם", optional:true, placeholder:"אפשר גם להשאיר ריק"},
+   {id:"s1_agency", type:"text", label:"שם הסוכנות", optional:true},
+   {id:"s1_phone", type:"tel", label:"טלפון, אם נוח לך שנחזור אליך", optional:true},
+   {id:"s1_role", type:"single", label:"מה התפקיד שלך?", required:true, options:["סוכן/ת עצמאי/ת","בעלים של סוכנות","סוכן/ת בסוכנות","רפרנט/ית","אחר"]},
+   {id:"s1_lines", type:"multi", label:"באילו תחומים את/ה עובד/ת?", hint:"אפשר לבחור כמה", options:["ביטוח חיים / ריסק","ריסק משכנתא","בריאות","פנסיוני וגמל","רכב","דירה","עסקים"]},
+   {id:"s1_referents", type:"single", label:"כמה רפרנטים/ות עובדים איתך?", options:["אין, הכול עליי","1","2 עד 3","4 עד 10","יותר מ-10"]},
+   {id:"s1_team", type:"single", label:"עובדים תחת הרישיון שלך מתמחים או סוכנים נוספים?", options:["לא","מתמחים","סוכנים נוספים","גם וגם"], addWord:{id:"s1_team_note", placeholder:"איך מוודאים היום שהם עובדים לפי הנהלים? (מילה או שתיים)"}}
+ ]},
+ { id:"s2", title:"יום העבודה שלך", min:1.5, intro:"רק הערכות גסות, לא צריך להיות מדויק.", fields:[
+   {id:"s2_files_month", type:"single", label:"כמה לקוחות חדשים בביטוח חיים/ריסק נפתחים אצלך בחודש?", required:true, options:["0 עד 5","6 עד 15","16 עד 30","31 עד 60","יותר מ-60"]},
+   {id:"s2_hours_per_file", type:"range", label:"כמה שעות עבודה (שלך או של רפרנט/ית) לוקח תיק ריסק אחד, מהשיחה הראשונה ועד שהפוליסה אצל הלקוח?", min:0.5, max:20, step:0.5, def:4, unit:"שעות"},
+   {id:"s2_load", type:"loads", label:"מה אוכל הכי הרבה זמן בתיק?", hint:"1 = כמעט לא, 5 = הרבה מאוד", rows:[
+      {id:"s2_load_chase", name:"רדיפה אחרי מסמכים וחתימות"},
+      {id:"s2_load_entry", name:"הקלדה והזנת נתונים"},
+      {id:"s2_load_wait", name:"המתנה לחברת הביטוח"}]},
+   {id:"s2_referent_cost", type:"single", label:"כמה עולה לך רפרנט/ית בחודש, בערך?", optional:true, options:["עד 8,000 ₪","8,000 עד 11,000 ₪","11,000 עד 14,000 ₪","מעל 14,000 ₪","משלם/ת לפי תיק","אין רפרנט/ית","מעדיף/ה לא לענות"]}
+ ]},
+ { id:"s3", title:"לקוח חדש בביטוח חיים", min:2, intro:"כאן נמצא הלב של השאלון: איך נראה תיק ריסק אצלך בפועל.", fields:[
+   {id:"s3_insurers_top", type:"rank", label:"עם אילו חברות את/ה עובד/ת הכי הרבה בריסק?", hint:"לחצו לפי הסדר: הראשונה = הכי הרבה (עד 3)", max:3, options:INSURERS},
+   {id:"s3_insurers_never", type:"text", label:"יש חברה שאת/ה לא עובד/ת איתה? למה?", optional:true, placeholder:"למשל: חיתום איטי, שירות לסוכנים…"},
+   {id:"s3_stuck_points", type:"multi", label:"איפה תיקים נתקעים הכי הרבה?", options:["הרשאות וחתימות","מסמכים רפואיים","דרישות חיתום","הלקוח לא זמין","מערכות החברה","ביטול הפוליסה הקודמת","מסירת הפוליסה ללקוח"]},
+   {id:"s3_last_sale", type:"textarea", label:"ספר/י בקצרה על מכירת הריסק האחרונה: מה היו השלבים, ואיפה זה נתקע?", required:true, placeholder:"כמה משפטים מספיקים…"},
+   {id:"s3_health_how", type:"single", label:"איך ממולאת הצהרת הבריאות אצלך בדרך כלל?", options:["הלקוח ממלא בעצמו על מסך","על נייר","מקריאים לו בטלפון","משתנה"]},
+   {id:"s3_health_rejected", type:"single", label:"נתקלת בתביעה שנדחתה בגלל אי-גילוי בהצהרת הבריאות?", options:["כן","לא","לא בטוח/ה"]},
+   {id:"s3_material_info", type:"multi", label:"איך מתעדים שמסרת ללקוח את המידע המהותי (פרמיה, החמרות, החרגות)?", options:["דף חתום","הקלטת שיחה","הערה ב-CRM","טופס של חברת הביטוח","לא בטוח/ה"]},
+   {id:"s3_replace_who", type:"single", label:"כשמחליפים פוליסה קיימת, מי שולח את נספח ב׳ ונספח ג׳?", options:["אני","הרפרנט/ית","החברה החדשה","משתנה"]},
+   {id:"s3_replace_check", type:"single", label:"איך מוודאים שהפוליסה החדשה הונפקה לפני שמבטלים את הישנה?", options:["בודקים בפורטל","מחכים לאישור מהחברה","אין תהליך קבוע","אחר"], addWord:{id:"s3_replace_note", placeholder:"מילה על איך זה עובד"}},
+   {id:"s3_seniors", type:"single", label:"בפנייה יזומה לאזרחים ותיקים: את/ה עובד/ת בתהליך הדו-שלבי?", options:["כן, באופן קבוע","לא פונים יזום לוותיקים","פוגשים פיזית, אז לא רלוונטי","לא מכיר/ה את התהליך"]},
+   {id:"s3_uw_channels", type:"multi", label:"איך מגיעות אליך דרישות חיתום?", options:["מייל","הודעות בפורטל","SMS","טלפון","וואטסאפ"]},
+   {id:"s3_uw_format", type:"single", label:"ובאיזה פורמט בדרך כלל?", options:["PDF מצורף","טקסט במייל","מסך בפורטל","משתנה"]}
+ ]},
+ { id:"s4", title:"מערכות וכלים", min:1.5, intro:"באילו כלים את/ה עובד/ת היום, ומה עובד או לא עובד בהם.", fields:[
+   {id:"s4_crm", type:"single", label:"איזו מערכת CRM / ניהול סוכנות יש לך?", options:["Surense","BAFI","SMS2010","Coral+","STAgent","Jamm","אקסל","אחר"], addWord:{id:"s4_crm_note", placeholder:"אם אחר, איזו?"}},
+   {id:"s4_crm_export", type:"single", label:"אפשר להוציא ממנה נתונים (API או ייצוא לקובץ)?", options:["כן","לא","לא יודע/ת"]},
+   {id:"s4_crm_contact", type:"text", label:"יש לך איש קשר אצל ספק המערכת?", optional:true, placeholder:"שם / תפקיד, אם נוח"},
+   {id:"s4_harb_how", type:"multi", label:"איך את/ה מוציא/ה דוח הר הביטוח?", options:["כניסה אישית לאתר","דרך מערכת או ספק","הלקוח שולח לי"]},
+   {id:"s4_harb_time", type:"single", label:"כמה זמן זה לוקח?", options:["פחות מ-5 דק׳","5 עד 15 דק׳","15 עד 30 דק׳","יותר מחצי שעה"]},
+   {id:"s4_mislaka_how", type:"single", label:"איך שולחים בקשות למסלקה (מידע 9100, מינוי סוכן 1700)?", options:["דרך הפורטל של סוויפטנס","דרך מערכת או ספק","לא עובד/ת עם המסלקה"]},
+   {id:"s4_mislaka_cost", type:"text", label:"יודע/ת כמה עולה בקשה או מנוי?", optional:true, placeholder:"אם ידוע לך"},
+   {id:"s4_esign", type:"single", label:"באיזה כלי חתימה דיגיטלית את/ה משתמש/ת?", options:["הכלי של חברת הביטוח","כלי חיצוני","דרך ה-CRM","רק חתימה פיזית"], addWord:{id:"s4_esign_note", placeholder:"שם הכלי, אם יש"}},
+   {id:"s4_esign_rejected", type:"single", label:"חברת ביטוח דחתה פעם מסמך שנחתם דיגיטלית?", options:["כן","לא","לא זוכר/ת"]},
+   {id:"s4_esign_rejected_note", type:"text", label:"איזו חברה, ולמה?", optional:true, showIf:{field:"s4_esign_rejected", eq:"כן"}},
+   {id:"s4_submit_matrix", type:"matrix", label:"איך מגישים הצעת ריסק לכל חברה?", hint:"רק לחברות שאת/ה עובד/ת איתן", rows:INSURERS.slice(0,7), options:["אונליין מלא","העלאת PDF חתום","תהליך דיגיטלי של החברה","לא עובד/ת איתם"]},
+   {id:"s4_reports_freq", type:"single", label:"כמה פעמים את/ה מוריד/ה דוחות אקסל מהפורטלים (תפוקה, עמלות, ייפויי כוח)?", options:["לא מוריד/ה","פעם בחודש","פעם בשבוע","כל יום"]},
+   {id:"s4_reports_use", type:"multi", label:"ומה עושים איתם?", options:["בדיקת עמלות","מעקב תפוקה","ייפויי כוח שפגים","מעקב ניודים","אחר"], showIf:{field:"s4_reports_freq", ne:"לא מוריד/ה"}},
+   {id:"s4_credentials", type:"single", label:"היית נותן/ת למערכת גישה לפורטלים של החברות עם הסיסמה שלך?", options:["כן","רק אם הקוד החד-פעמי מגיע אליי","לא, בשום אופן","לא בטוח/ה שהחברה מתירה"]}
+ ]},
+ { id:"s5", title:"רגולציה ותיעוד", min:1, intro:"אין תשובות נכונות או לא נכונות. אנחנו רק רוצים להבין מה קורה בשטח.", fields:[
+   {id:"s5_record", type:"single", label:"מקליטים אצלך שיחות מכירה?", options:["כל השיחות","חלק מהשיחות","לא מקליטים"]},
+   {id:"s5_record_system", type:"text", label:"באיזו מערכת מקליטים?", optional:true, showIf:{field:"s5_record", ne:"לא מקליטים"}},
+   {id:"s5_record_keep", type:"single", label:"כמה זמן שומרים הקלטות?", options:["פחות משנה","1 עד 2 שנים","2 עד 7 שנים","7 שנים ומעלה","לא יודע/ת"], showIf:{field:"s5_record", ne:"לא מקליטים"}},
+   {id:"s5_handover_conf", type:"scale", label:"אם לקוח יבקש את כל ההקלטות שלו, כמה קל יהיה למסור לו אותן תוך 10 ימי עסקים?", ends:["קשה מאוד","קל מאוד"]},
+   {id:"s5_audit", type:"single", label:"בדקו פעם את תיעוד הצירוף שלך?", options:["כן, רשות שוק ההון","כן, חברת ביטוח","לא"], addWord:{id:"s5_audit_note", placeholder:"מה ביקשו לראות?"}},
+   {id:"s5_harb_after", type:"single", label:"מה קורה עם נתוני הר הביטוח אחרי שפג תוקף ההרשאה (5 ימי עבודה)?", options:["התדפיס נשאר בתיק","שומרים רק סיכום","מוחקים","לא בטוח/ה"]},
+   {id:"s5_waiver", type:"single", label:"הלקוחות חותמים על הסכמה שמאפשרת לספקי תוכנה חיצוניים לראות את המידע שלהם?", options:["כן","לא","לא יודע/ת"]},
+   {id:"s5_hosting", type:"single", label:"איפה נשמר היום המידע על הלקוחות?", options:["בענן של מערכת ה-CRM","שרת במשרד","מחשב אישי","לא יודע/ת"]},
+   {id:"s5_dpo_asked", type:"single", label:"מישהו שאל אותך על תקנות אבטחת מידע או על ממונה הגנת פרטיות?", options:["כן","לא"]},
+   {id:"s5_reg15", type:"single", label:"יש לך חוזה כתוב עם ספק ה-CRM על אבטחת מידע (מיקור חוץ)?", options:["כן","לא","לא יודע/ת"]}
+ ]},
+ { id:"s6", title:"מה היה שווה לך", min:1.5, intro:"החלק האחרון: מה היית נותן/ת לעוזרת דיגיטלית לעשות, ומה לא.", fields:[
+   {id:"s6_ai_matrix", type:"matrix", label:"מה היית נותן/ת לעוזרת דיגיטלית לעשות?", rows:["תיוק מסמכים לתיק","תזכורות ללקוח על מסמכים","מילוי טפסים מראש","מייל לחיתום בחברה","סיכום שיחה","טיוטת התאמת צרכים","הודעות וואטסאפ ללקוח"], options:["לבד","כטיוטה לאישורי","אף פעם"]},
+   {id:"s6_ai_clients", type:"single", label:"עוזרת דיגיטלית שמדברת ישירות עם לקוחות (איסוף מסמכים, תיאום)?", options:["לא","כן, בשם שלי","כן, כ\"עוזרת דיגיטלית של הסוכנות\""]},
+   {id:"s6_ai_insurer", type:"single", label:"ופנייה לחיתום בחברות בשמך?", options:["כן, במייל","כן, גם בטלפון","לא"]},
+   {id:"s6_insurer_bot_ok", type:"single", label:"החברות יקבלו מייל מכתובת אוטומטית של הסוכנות?", options:["כן","לא","לא יודע/ת"]},
+   {id:"s6_dealbreaker", type:"textarea", label:"איזו טעות של מערכת כזו תגרום לך להפסיק להשתמש בה מיד?", required:true, placeholder:"משפט אחד מספיק"},
+   {id:"s6_decider", type:"single", label:"מי מחליט אצלכם על רכישת תוכנה?", options:["אני","שותף/ה","מנהל/ת הסוכנות","ביחד"]},
+   {id:"s6_wtp", type:"single", label:"כמה היה סביר לשלם בחודש על כלי שחוסך חצי מזמן הרפרנט/ית בתיק?", options:["לא הייתי משלם/ת","עד 200 ₪","200 עד 500 ₪","500 עד 1,000 ₪","מעל 1,000 ₪","תלוי"], addWord:{id:"s6_wtp_note", placeholder:"במה זה תלוי?"}},
+   {id:"s6_pricing", type:"single", label:"איך עדיף לך לשלם?", options:["לפי משתמש","לפי תיק","סכום חודשי קבוע"]},
+   {id:"s6_switch", type:"single", label:"היית מחליף/ה CRM, או רק מוסיף/ה כלי מעליו?", options:["רק תוסף מעל מה שיש","מוכן/ה להחליף אם זה שווה","לא יודע/ת"], addWord:{id:"s6_switch_note", placeholder:"מה היה גורם לך להחליף?"}},
+   {id:"s6_tried_ai", type:"single", label:"ניסית כלי AI לסוכנים (למשל Jamm או אחר)?", options:["לא","Jamm","כלי אחר"]},
+   {id:"s6_tried_ai_note", type:"text", label:"מה היה חסר בו?", optional:true, showIf:{field:"s6_tried_ai", ne:"לא"}},
+   {id:"s6_next_line", type:"single", label:"אחרי ריסק, מה הכי כואב?", options:["בריאות","ניודים פנסיוניים","חידושי רכב","תביעות"]},
+   {id:"s6_pilot", type:"single", label:"היית מצטרף/ת לפיילוט בתשלום (2 עד 3 חודשים)?", options:["כן","אולי","לא"]},
+   {id:"s6_pilot_x", type:"single", label:"בתנאי שהמערכת מטפלת בכמה תיקי חיים חדשים בחודש?", options:["עד 5","6 עד 15","16 עד 30","יותר מ-30"], showIf:{field:"s6_pilot", ne:"לא"}},
+   {id:"s6_more", type:"textarea", label:"משהו שלא שאלנו ושחשוב שנדע?", optional:true}
+ ]}
+];
+const TOTAL_MIN = STEPS.reduce((a,s)=>a+s.min,0);
+
+let state = load();
+function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || {screen:"intro", a:{}} }catch(e){ return {screen:"intro", a:{}} } }
+let saveTimer;
+function save(){ try{ state.savedAt = new Date().toISOString(); localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  const s=document.getElementById("saved"); if(s){ s.textContent="נשמר ✓"; clearTimeout(saveTimer); saveTimer=setTimeout(()=>s.textContent="",1600);} }
+const A = () => state.a;
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function visible(f){ if(!f.showIf) return true; const v=A()[f.showIf.field]; if(f.showIf.eq!==undefined) return v===f.showIf.eq; if(f.showIf.ne!==undefined) return v!==undefined && v!==f.showIf.ne; return true; }
+
+const app = document.getElementById("app");
+function toast(t){ const el=document.getElementById("toast"); el.textContent=t; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),1800); }
+
+function render(){
+  const sc=state.screen;
+  document.getElementById("progress").hidden = !(typeof sc==="number");
+  document.getElementById("nav").hidden = !(typeof sc==="number");
+  if(sc==="intro") return renderIntro();
+  if(sc==="summary") return renderSummary();
+  renderStep(sc);
+  window.scrollTo({top:0,behavior:"instant"});
+}
+
+function renderIntro(){
+  const has = Object.keys(A()).length>0;
+  app.innerHTML = `
+  <section class="card" aria-labelledby="h1">
+    <h1 id="h1">היי, תודה שאת/ה כאן 👋</h1>
+    <p class="lead">קוראים לי ${esc(CONFIG.askerName)}. אני בונה עוזרת דיגיטלית למשרד האחורי של סוכני ביטוח: רפרנטית שמכינה טפסים, רודפת אחרי מסמכים ומתייקת, וההחלטות והחתימה נשארות אצל הסוכן.</p>
+    <p class="lead">לפני שבונים, אני רוצה ללמוד ממי שעושה את העבודה ביום-יום.</p>
+    <div class="introgrid">
+      <div class="pill"><span class="ico">⏱</span><span><b>כ-${Math.round(TOTAL_MIN)} דקות</b>, 6 שלבים קצרים, ורוב התשובות בלחיצה.</span></div>
+      <div class="pill"><span class="ico">↺</span><span><b>נשמר אוטומטית</b> בדפדפן שלך, אפשר להפסיק ולחזור.</span></div>
+      <div class="pill"><span class="ico">✓</span><span><b>רק 2 שאלות פתוחות חובה</b>, וכל השאר בלחיצה. שם וסוכנות לא חובה.</span></div>
+      <div class="pill"><span class="ico">🔒</span><span><b>למחקר מוצר בלבד.</b> לא שואלים על לקוחות, ולא מעבירים את התשובות לאף אחד.</span></div>
+    </div>
+    <p class="privacy">פרטיות: התשובות נשמרות רק במכשיר שלך עד שתבחר/י לשלוח אותן (וואטסאפ, מייל או קובץ). אין כאן מעקב או אנליטיקס. אל תכתוב/י פרטים מזהים של לקוחות.</p>
+    <div class="introbtns" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+      <button class="btn primary" id="start" type="button">${has?"להמשיך מאיפה שעצרתי ←":"בואו נתחיל ←"}</button>
+      ${has?`<button class="btn ghost" id="reset" type="button">להתחיל מחדש</button>`:""}
+    </div>
+  </section>`;
+  document.getElementById("start").onclick=()=>{ state.screen = (typeof state.last==="number")?state.last:0; save(); render(); };
+  const r=document.getElementById("reset"); if(r) r.onclick=()=>{ if(confirm("למחוק את כל התשובות ולהתחיל מחדש?")){ state={screen:0,a:{}}; save(); render(); } };
+}
+
+function progress(i){
+  const done = STEPS.slice(0,i).reduce((a,s)=>a+s.min,0);
+  const pct = Math.round(done/TOTAL_MIN*100);
+  document.getElementById("pstep").textContent = `שלב ${i+1} מתוך ${STEPS.length} · ${STEPS[i].title}`;
+  const left = Math.max(1, Math.round(TOTAL_MIN-done));
+  document.getElementById("ptime").textContent = `נשארו כ-${left} דק׳`;
+  const bar=document.getElementById("pbar"); bar.setAttribute("aria-valuenow",pct); bar.querySelector("i").style.width = Math.max(4,pct)+"%";
+  document.getElementById("pdots").innerHTML = STEPS.map((s,k)=>`<span class="${k===i?"on":k<i?"done":""}">${k<i?"✓ ":""}${esc(s.title)}</span>`).join("");
+}
+
+function fieldHTML(f){
+  const v=A()[f.id];
+  const lab = `<span class="qlabel" id="l_${f.id}">${esc(f.label)}${f.required?'<span class="req" aria-hidden="true">*</span><span class="sr">(חובה)</span>':''}${f.optional?'<span class="opt">(לא חובה)</span>':''}</span>${f.hint?`<p class="qhint">${esc(f.hint)}</p>`:""}`;
+  let body="";
+  if(f.type==="text"||f.type==="tel"){
+    body=`<input type="${f.type==="tel"?"tel":"text"}" id="${f.id}" data-f="${f.id}" aria-labelledby="l_${f.id}" value="${esc(v)}" placeholder="${esc(f.placeholder||"")}" ${f.type==="tel"?'inputmode="tel" autocomplete="tel"':''}>`;
+  } else if(f.type==="textarea"){
+    body=`<textarea id="${f.id}" data-f="${f.id}" aria-labelledby="l_${f.id}" placeholder="${esc(f.placeholder||"")}">${esc(v)}</textarea>`;
+  } else if(f.type==="single"){
+    body=`<div class="chips" role="radiogroup" aria-labelledby="l_${f.id}">${f.options.map(o=>`<button type="button" class="chip" role="radio" aria-checked="${v===o}" data-single="${f.id}" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>`;
+  } else if(f.type==="multi"){
+    const arr=v||[];
+    body=`<div class="chips" role="group" aria-labelledby="l_${f.id}">${f.options.map(o=>`<button type="button" class="chip" aria-pressed="${arr.includes(o)}" data-multi="${f.id}" data-v="${esc(o)}">${arr.includes(o)?"✓ ":""}${esc(o)}</button>`).join("")}</div>`;
+  } else if(f.type==="rank"){
+    const arr=v||[];
+    body=`<div class="chips" role="group" aria-labelledby="l_${f.id}">${f.options.map(o=>{const k=arr.indexOf(o);return `<button type="button" class="chip" aria-pressed="${k>=0}" data-rank="${f.id}" data-max="${f.max}" data-v="${esc(o)}">${k>=0?`<span class="ord">${k+1}</span>`:""}${esc(o)}</button>`}).join("")}</div>`;
+  } else if(f.type==="range"){
+    const val = v ?? f.def;
+    body=`<div class="rangewrap"><input type="range" id="${f.id}" data-range="${f.id}" min="${f.min}" max="${f.max}" step="${f.step}" value="${val}" aria-labelledby="l_${f.id}" aria-valuetext="${val} ${f.unit}"><span class="rangeval" id="rv_${f.id}">${v===undefined?"גרור/י":val+" "+f.unit}</span></div>`;
+  } else if(f.type==="scale"){
+    body=`<div class="scale" role="radiogroup" aria-labelledby="l_${f.id}">${[1,2,3,4,5].map(n=>`<button type="button" class="chip" role="radio" aria-checked="${v===n}" data-scale="${f.id}" data-v="${n}">${n}</button>`).join("")}</div><div class="scaleends"><span>${esc(f.ends[0])}</span><span>${esc(f.ends[1])}</span></div>`;
+  } else if(f.type==="loads"){
+    body=f.rows.map(r=>{const rv=A()[r.id];return `<div class="loadrow"><span class="name" id="l_${r.id}">${esc(r.name)}</span><div class="scale" role="radiogroup" aria-labelledby="l_${r.id}">${[1,2,3,4,5].map(n=>`<button type="button" class="chip" role="radio" aria-checked="${rv===n}" data-scale="${r.id}" data-v="${n}">${n}</button>`).join("")}</div></div>`}).join("");
+  } else if(f.type==="matrix"){
+    const m=v||{};
+    body=`<div class="matrix">${f.rows.map(r=>`<div class="mrow"><div class="mname" id="l_${f.id}_${esc(r)}">${esc(r)}</div><div class="chips" role="radiogroup" aria-labelledby="l_${f.id}_${esc(r)}">${f.options.map(o=>`<button type="button" class="chip" role="radio" aria-checked="${m[r]===o}" data-matrix="${f.id}" data-row="${esc(r)}" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div></div>`).join("")}</div>`;
+  }
+  const add = f.addWord ? `<div class="addword"><input type="text" data-f="${f.addWord.id}" aria-label="${esc(f.addWord.placeholder)}" placeholder="✎ ${esc(f.addWord.placeholder)} (לא חובה)" value="${esc(A()[f.addWord.id])}"></div>` : "";
+  const err = f.required ? `<div class="err" role="alert">רק עוד משפט קצר כאן ונמשיך 🙂</div>` : "";
+  return `<div class="q" data-q="${f.id}">${lab}${body}${add}${err}</div>`;
+}
+
+function renderStep(i){
+  state.last=i; progress(i);
+  const s=STEPS[i];
+  const fields=s.fields.filter(visible);
+  const contact = s.id==="s1" ? `<div class="grid2">${fields.filter(f=>["s1_name","s1_agency"].includes(f.id)).map(fieldHTML).join("")}</div>` : "";
+  const rest = fields.filter(f=>!(s.id==="s1" && ["s1_name","s1_agency"].includes(f.id)));
+  app.innerHTML = `<section class="card" aria-labelledby="sh"><span class="steptag">שלב ${i+1} · כ-${s.min<1?1:Math.round(s.min*10)/10} דק׳</span><h2 id="sh">${esc(s.title)}</h2><p class="lead">${esc(s.intro)}</p>${contact}${rest.map(fieldHTML).join("")}</section>`;
+  document.getElementById("back").textContent = i===0 ? "→ להתחלה" : "→ חזרה";
+  document.getElementById("next").textContent = i===STEPS.length-1 ? "סיום וסיכום ✓" : "המשך ←";
+  bind(i);
+}
+
+function bind(i){
+  app.querySelectorAll("[data-f]").forEach(el=>el.addEventListener("input",e=>{ A()[el.dataset.f]=el.value; const q=el.closest(".q"); if(q&&el.value.trim()) q.classList.remove("invalid"); save(); }));
+  app.querySelectorAll("[data-single]").forEach(el=>el.onclick=()=>{ const id=el.dataset.single; A()[id] = (A()[id]===el.dataset.v)?undefined:el.dataset.v; save(); rerender(i); });
+  app.querySelectorAll("[data-multi]").forEach(el=>el.onclick=()=>{ const id=el.dataset.multi; const arr=A()[id]||[]; const k=arr.indexOf(el.dataset.v); k>=0?arr.splice(k,1):arr.push(el.dataset.v); A()[id]=arr; save(); rerender(i); });
+  app.querySelectorAll("[data-rank]").forEach(el=>el.onclick=()=>{ const id=el.dataset.rank; const arr=A()[id]||[]; const k=arr.indexOf(el.dataset.v); if(k>=0) arr.splice(k,1); else if(arr.length<+el.dataset.max) arr.push(el.dataset.v); else toast("אפשר לבחור עד "+el.dataset.max); A()[id]=arr; save(); rerender(i); });
+  app.querySelectorAll("[data-scale]").forEach(el=>el.onclick=()=>{ const id=el.dataset.scale; const n=+el.dataset.v; A()[id]=(A()[id]===n)?undefined:n; save(); rerender(i); });
+  app.querySelectorAll("[data-matrix]").forEach(el=>el.onclick=()=>{ const id=el.dataset.matrix; const m=A()[id]||{}; m[el.dataset.row] = (m[el.dataset.row]===el.dataset.v)?undefined:el.dataset.v; A()[id]=m; save(); rerender(i); });
+  app.querySelectorAll("[data-range]").forEach(el=>el.addEventListener("input",()=>{ const f=STEPS[i].fields.find(x=>x.id===el.dataset.range); A()[f.id]=+el.value; document.getElementById("rv_"+f.id).textContent=el.value+" "+f.unit; el.setAttribute("aria-valuetext",el.value+" "+f.unit); save(); }));
+}
+function rerender(i){ const y=window.scrollY; const act=document.activeElement; const key=act&&act.dataset?JSON.stringify(act.dataset):null; renderStep(i); window.scrollTo(0,y);
+  if(key){ const m=[...app.querySelectorAll("button")].find(b=>JSON.stringify(b.dataset)===key); if(m) m.focus({preventScroll:true}); } }
+
+function validate(i){
+  let first=null;
+  STEPS[i].fields.filter(visible).forEach(f=>{ if(!f.required) return; const v=A()[f.id]; const ok = Array.isArray(v)?v.length>0 : (v!==undefined && String(v).trim()!==""); const q=app.querySelector(`[data-q="${f.id}"]`); if(!ok){ q.classList.add("invalid"); first=first||q; } else q.classList.remove("invalid"); });
+  if(first){ first.scrollIntoView({behavior:"smooth",block:"center"}); const inp=first.querySelector("textarea,input,button"); if(inp) inp.focus({preventScroll:true}); return false; }
+  return true;
+}
+document.getElementById("next").onclick=()=>{ const i=state.screen; if(!validate(i)) return; state.screen = i<STEPS.length-1 ? i+1 : "summary"; save(); render(); };
+document.getElementById("back").onclick=()=>{ const i=state.screen; state.screen = i>0 ? i-1 : "intro"; save(); render(); };
+
+function fmtVal(f){
+  const v=A()[f.id];
+  if(f.type==="loads") return f.rows.map(r=>`  · ${r.name}: ${A()[r.id]??"—"}/5`).join("\n");
+  if(f.type==="matrix"){ const m=v||{}; const rows=f.rows.filter(r=>m[r]); return rows.length? rows.map(r=>`  · ${r}: ${m[r]}`).join("\n") : "—"; }
+  if(Array.isArray(v)) return v.length? (f.type==="rank"? v.map((x,k)=>`${k+1}. ${x}`).join(", ") : v.join(", ")) : "—";
+  if(f.type==="range") return v===undefined?"—":`${v} ${f.unit}`;
+  if(f.type==="scale") return v===undefined?"—":`${v}/5`;
+  return (v===undefined||String(v).trim()==="")?"—":String(v);
+}
+function buildText(){
+  const L=["שאלון INES לסוכני ביטוח – תשובות", "תאריך: "+new Date().toLocaleDateString("he-IL"), ""];
+  STEPS.forEach((s,k)=>{ L.push(`■ ${k+1}. ${s.title}`);
+    s.fields.filter(visible).forEach(f=>{ const val=fmtVal(f); const multi = f.type==="loads"||f.type==="matrix";
+      if(val==="—" || (f.type==="loads" && f.rows.every(r=>A()[r.id]===undefined))) return;
+      L.push(multi? `${f.label}\n${val}` : `${f.label}: ${val}`);
+      if(f.addWord && A()[f.addWord.id]) L.push(`  ✎ ${A()[f.addWord.id]}`); });
+    L.push(""); });
+  return L.join("\n").trim();
+}
+function buildJSON(){ return JSON.stringify({questionnaire:"INES agent research v1", exportedAt:new Date().toISOString(), answers:A()}, null, 2); }
+function download(name, content, type){ const b=new Blob([content],{type}); const u=URL.createObjectURL(b); const a=document.createElement("a"); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),1000); }
+
+function renderSummary(){
+  const text=buildText();
+  const num=(CONFIG.whatsappNumber||"").replace(/\D/g,"");
+  const wa = `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+  const mail = `mailto:${encodeURIComponent(CONFIG.email||"")}?subject=${encodeURIComponent("שאלון INES – תשובות")}&body=${encodeURIComponent(text)}`;
+  app.innerHTML = `
+  <section class="card thanks"><div class="big" aria-hidden="true">✓</div><h1>תודה רבה!</h1><p class="lead">זה ממש עוזר לבנות משהו שבאמת חוסך עבודה. נשאר רק לשלוח לי את התשובות, באיזו דרך שנוח לך.</p></section>
+  <section class="card" aria-labelledby="sumh">
+    <h2 id="sumh">התשובות שלך</h2>
+    <p class="qhint">אפשר לחזור ולתקן לפני השליחה.</p>
+    <div class="summary" tabindex="0">${esc(text)}</div>
+    <div class="actions">
+      <a class="btn wa" href="${wa}" target="_blank" rel="noopener">שליחה בוואטסאפ</a>
+      <a class="btn soft" href="${mail}">שליחה במייל</a>
+      <button class="btn soft" id="copy" type="button">העתקת התשובות</button>
+      <button class="btn ghost" id="dl" type="button">הורדה כקובץ טקסט</button>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+      <button class="btn ghost" id="edit" type="button">→ חזרה לתיקון</button>
+      <button class="btn ghost" id="dljson" type="button">הורדת JSON</button>
+    </div>
+    <p class="privacy">אם הוואטסאפ לא נפתח עם כל הטקסט (הודעות ארוכות), לחצו "העתקת התשובות" והדביקו בצ׳אט.</p>
+  </section>`;
+  document.getElementById("copy").onclick=async()=>{ try{ await navigator.clipboard.writeText(text); toast("הועתק ✓"); }catch(e){ const t=document.createElement("textarea"); t.value=text; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); toast("הועתק ✓"); } };
+  document.getElementById("dl").onclick=()=>download("INES-answers.txt", text, "text/plain;charset=utf-8");
+  document.getElementById("dljson").onclick=()=>download("INES-answers.json", buildJSON(), "application/json");
+  document.getElementById("edit").onclick=()=>{ state.screen=STEPS.length-1; save(); render(); };
+}
+
+/* Preview hook for local screenshots only: #preview=2 (step index) or #preview=summary loads sample answers in memory (never saved). */
+(function(){ const m=location.hash.match(/preview=(\w+)/); if(!m) return;
+  window.save=function(){}; // do not persist preview data
+  state={screen:0,a:{s1_role:"בעלים של סוכנות",s1_lines:["ביטוח חיים / ריסק","בריאות","פנסיוני וגמל"],s1_referents:"2 עד 3",s2_files_month:"16 עד 30",s2_hours_per_file:5,s2_load_chase:5,s2_load_entry:4,s2_load_wait:3,
+    s3_insurers_top:["הראל","מגדל","הפניקס"],s3_stuck_points:["מסמכים רפואיים","דרישות חיתום"],s3_last_sale:"דוגמה: הלקוח חתם מהר, אבל דרישת חיתום על מסמך רפואי תקעה את התיק שבועיים.",s3_health_how:"הלקוח ממלא בעצמו על מסך",
+    s3_uw_channels:["מייל","הודעות בפורטל"],s4_crm:"Surense",s4_submit_matrix:{"הראל":"תהליך דיגיטלי של החברה","מגדל":"העלאת PDF חתום"},s5_record:"חלק מהשיחות",s5_handover_conf:2,
+    s6_ai_matrix:{"תיוק מסמכים לתיק":"לבד","מייל לחיתום בחברה":"כטיוטה לאישורי","הודעות וואטסאפ ללקוח":"כטיוטה לאישורי"},s6_dealbreaker:"דוגמה: שליחת מסמך רפואי ללקוח הלא נכון.",s6_pilot:"אולי"}};
+  state.screen = m[1]==="summary" ? "summary" : (m[1]==="intro"?"intro":+m[1]);
+})();
+document.getElementById("bsub").textContent = "מחקר מוצר · כ-"+Math.round(TOTAL_MIN)+" דקות";
+render();
+</script>
+</body>
+</html>
